@@ -1,6 +1,8 @@
 import java.io.*;
 import java.net.*;
-import java.util.Date;
+import java.util.*;
+import javax.sound.sampled.*;
+
 public class ServerThread extends Thread{
     public Socket socket;
 
@@ -19,7 +21,7 @@ public class ServerThread extends Thread{
 
             BufferedReader inputReader = new BufferedReader(new InputStreamReader(socket.getInputStream())); // Gets the input from clients
             String message = "";
-            while (!message.equals("quit")) { // Keep going untill the client sends a quit command
+            while (!message.equals("quit")) { // Keep going until the client sends a quit command
                 message = inputReader.readLine();
                 System.out.println(message.toUpperCase() + '\t' + this.socket.getPort());
                 writer.println("Message form server: " + message.toUpperCase() + '\t' + this.socket.getPort());
@@ -34,4 +36,6 @@ public class ServerThread extends Thread{
             ex.printStackTrace();
         }
     }
+
+
 }
