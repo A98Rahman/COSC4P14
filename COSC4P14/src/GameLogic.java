@@ -1,3 +1,6 @@
+import javax.print.DocFlavor;
+import java.util.Scanner;
+
 public class GameLogic {
     static enum PLAYERID{
         RED("R"),
@@ -21,6 +24,18 @@ public class GameLogic {
 
     public GameLogic(){
        initializeGameBoard();
+    }
+    public boolean move(PLAYERID pID,Scanner input){
+        String move="";
+        do{ //Keeps asking for moves until a valid move is played
+            move = input.next();
+        }
+        while (!validateAndPlay(move,pID));
+
+        if (isWinningMove(pID))
+            return true;
+
+        return false;
     }
     public boolean validateAndPlay(String move, PLAYERID pID){ //Rows go from A to F and columns from 1 to 7
         int r,c;
@@ -48,8 +63,6 @@ public class GameLogic {
             gameBoard[r][c-1] = pID;
         else
             gameBoard[r][c-1] = pID;
-
-        isWinningMove(pID);
     }
     public PLAYERID[][] getGameBoard(){
         return this.gameBoard;
@@ -75,6 +88,25 @@ public class GameLogic {
                 gameBoard[row][col] = null;
             }
         }
+    }
+
+    public boolean playerMove(GameLogic.PLAYERID pID, Scanner input, GameLogic logic){ //returns true if the game is over
+        //String move1= input.next();
+        boolean state = logic.move(pID,input);
+        logic.printGameBoard();
+        return state;
+    }
+
+    public boolean start(){
+        Scanner input = new Scanner(System.in);
+        PLAYERID currID = PLAYERID.RED;
+        boolean isGameOver = false;
+        while (!isGameOver){
+            playerMove(currID,input,this);
+            isGameOver = isWinningMove(currID);
+            currID = currID==PLAYERID.RED?PLAYERID.BLUE:PLAYERID.RED;
+        }
+        return true;
     }
 
 //    public int isValidRow(char r){
@@ -125,7 +157,7 @@ public class GameLogic {
 
     public boolean isWinningMove(PLAYERID pID){
         if(verticalCombination(pID) || horizontalCombination(pID)){
-            System.out.println("GAMEOVER");
+            System.out.println("Gameover: PLAYER "+ pID.toString()+" WINS.");
             return true;
         }
         return false;
