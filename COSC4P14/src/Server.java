@@ -77,7 +77,7 @@ public class Server {
 //                            String invalidMoveMsg = GameLogic.validationMessage[validMoveFlag];// inValid move error message
                             isGameOver = game.isWinningMove(currID);//win flag
                             String board = game.printGameBoard(); //gameboard
-                            String newMessage= "Player "+currID.toString()+"'s turn...";
+                            String newMessage= "Awaiting opponents turn";
                             ConnectHeader ServerResponse2 = new ConnectHeader(board,currID.toString(),(isGameOver?1:0),validMoveFlag,newMessage);
                             //byte[] pack = pack(ch);
                             currPlayerOutput.writeObject(ServerResponse2);

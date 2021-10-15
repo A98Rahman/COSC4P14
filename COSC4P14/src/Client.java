@@ -40,6 +40,11 @@ public class Client {
                     System.out.println(cH.getgB());
                     System.out.println(cH.getM());
                     message = userInputReader.readLine();
+                    if (!message.equals("quit")){ //Had to exit the loop. The connection is first terminated from server side.
+                        outputToServer.writeObject(
+                                new ConnectHeader("","", 0, -1, message)
+                        );
+                        outputToServer.flush();
                 }
                 else {
                     System.out.println("Something went wrong");
@@ -51,12 +56,7 @@ public class Client {
                 }
             }
 
-            while(!message.equals("quit")){ //Had to exit the loop. The connection is first terminated from server side.
 
-                outputToServer.writeObject(
-                        new ConnectHeader("","", 0, -1, message)
-                );
-                outputToServer.flush();
                // ConnectHeader cH = unpack(fromServerReader.readLine());
 //               ConnectHeader cH = (ConnectHeader)inputFromServer.readObject();
 //               System.out.println(cH.getgB());
