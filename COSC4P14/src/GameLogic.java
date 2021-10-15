@@ -1,4 +1,3 @@
-import javax.print.DocFlavor;
 import java.util.Scanner;
 
 public class GameLogic {
@@ -17,6 +16,8 @@ public class GameLogic {
             return this.label;
         }
     }
+
+    static String[] validationMessage= {"Invalid Input","Invalid Move"};
     static char[] rowLabel = {'A','B','C','D','E','F'};
 
     public PLAYERID[][] gameBoard = new PLAYERID[6][7];//6 rows and 7 columns
@@ -25,40 +26,42 @@ public class GameLogic {
     public GameLogic(){
        initializeGameBoard();
     }
-    public boolean move(PLAYERID pID,Scanner input){
+    public int move(PLAYERID pID,Scanner input){
         String move="";
+        int validation;
         do{ //Keeps asking for moves until a valid move is played
             move = input.next();
+            validation = validateAndPlay(move,pID);
         }
-        while (!validateAndPlay(move,pID));
+        while (validation>0);
 
-        if (isWinningMove(pID))
-            return true;
+        //if (isWinningMove(pID))
+        //    return true;
 
-        return false;
+        return validation;
     }
-    public boolean validateAndPlay(String move, PLAYERID pID){ //Rows go from A to F and columns from 1 to 7
+    public int validateAndPlay(String move, PLAYERID pID){ //Rows go from A to F and columns from 1 to 7
         int r,c;
         if(move.length() !=2){
             System.out.println("Invalid command");
-            return false;
+            return 0;
         }
         if(isValidRow(move.charAt(0)) >=0 && isValidColumn(move.substring(1))>0 ){
             r = isValidRow(move.charAt(0));
             c = isValidColumn(move.substring(1));
             if(gameBoard[r][c-1] != null){
                 System.out.println("This spot is already taken");
-                return false;
+                return 1;
             }
             makeMove(r,c,pID); //make the move
         }else {
             System.out.println("Invalid Row or Column index");
-            return false;}
+            return 0;}
 
-        return true;
+        return -1;
     }
 
-    public void makeMove(int r, int c, PLAYERID pID){
+    public void makeMove(int r, int c, PLAYERID pID) {
         if(pID == PLAYERID.BLUE)
             gameBoard[r][c-1] = pID;
         else
@@ -90,11 +93,11 @@ public class GameLogic {
         }
     }
 
-    public boolean playerMove(GameLogic.PLAYERID pID, Scanner input, GameLogic logic){ //returns true if the game is over
+    public int playerMove(GameLogic.PLAYERID pID, Scanner input, GameLogic logic){ //returns true if the game is over
         //String move1= input.next();
-        boolean state = logic.move(pID,input);
+        int validation = logic.move(pID,input);
         logic.printGameBoard();
-        return state;
+        return validation;
     }
 
     public boolean start(){
@@ -138,21 +141,27 @@ public class GameLogic {
             return -1;
         }
     }
-    public void printGameBoard(){
+    public String printGameBoard(){
+    String board="";
         for (int row = 0; row < 6; row++) {
             System.out.print(Character.toString(rowLabel[row]) + '\t');
             for (int col = 0; col < 7; col++) {
+                board = ((gameBoard[row][col]) == null ?"-":((gameBoard[row][col]).toString()) )+ '\t';
                 System.out.print(((gameBoard[row][col]) == null ?"-":((gameBoard[row][col]).toString()) )+ '\t');
             }
+            board+="\n\r";
             System.out.println();
         }
         System.out.print('\t');
         for (int i = 0; i < 7; i++) {
+            board+= ""+(i+1)+"\t";
             System.out.print(i+1);
             System.out.print('\t');
 
         }
+        board+="\r\n";
         System.out.println();
+        return board;
     }
 
     public boolean isWinningMove(PLAYERID pID){
