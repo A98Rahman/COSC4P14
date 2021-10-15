@@ -67,7 +67,7 @@ public class Server {
                                         currPlayerOutput.writeObject(serverResponse);
                                         clientResponse = (ConnectHeader)currPlayerInput.readObject();
                                         validMoveFlag = game.validateAndPlay(clientResponse.getM(),currID);
-                                        invalidMsg = (validMoveFlag>0?GameLogic.validationMessage[validMoveFlag]:"");
+                                        invalidMsg = (validMoveFlag>=0?GameLogic.validationMessage[validMoveFlag]:"");
                                         // -1: valid, 0: invalid index, 1: invalid move
                               }
                               while (validMoveFlag > -1);

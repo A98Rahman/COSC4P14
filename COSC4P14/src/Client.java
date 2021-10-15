@@ -30,6 +30,7 @@ public class Client {
 
             while (!gameOver) {
                 cH = (ConnectHeader)inputFromServer.readObject();
+                System.out.println();
 
                 if (cH.getwF() == 1) {
                     System.out.println(cH.getgB());
@@ -40,11 +41,12 @@ public class Client {
                     System.out.println(cH.getgB());
                     System.out.println(cH.getM());
                     message = userInputReader.readLine();
-                    if (!message.equals("quit")){ //Had to exit the loop. The connection is first terminated from server side.
+                    if (!message.equals("quit")) { //Had to exit the loop. The connection is first terminated from server side.
                         outputToServer.writeObject(
-                                new ConnectHeader("","", 0, -1, message)
+                                new ConnectHeader("", "", 0, -1, message)
                         );
                         outputToServer.flush();
+                    }
                 }
                 else {
                     System.out.println("Something went wrong");
@@ -55,6 +57,8 @@ public class Client {
                     System.out.println(cH.getM());
                 }
             }
+
+
 
 
                // ConnectHeader cH = unpack(fromServerReader.readLine());
@@ -74,7 +78,6 @@ public class Client {
 //                outputToServer.writeObject(clientResponse);
 //
 //                outputToServer.flush();
-            }
 
             //String response = fromServerReader.readLine();
             //System.out.println(response + '\t' +"Connection closed by the host");
