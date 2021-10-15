@@ -152,7 +152,7 @@ public class GameLogic {
         for (int row = 0; row < 6; row++) {
             System.out.print(Character.toString(rowLabel[row]) + '\t');
             for (int col = 0; col < 7; col++) {
-                board = ((gameBoard[row][col]) == null ?"-":((gameBoard[row][col]).toString()) )+ '\t';
+                board += ((gameBoard[row][col]) == null ?"-":((gameBoard[row][col]).toString()) )+ '\t';
                 System.out.print(((gameBoard[row][col]) == null ?"-":((gameBoard[row][col]).toString()) )+ '\t');
             }
             board+="\n\r";
