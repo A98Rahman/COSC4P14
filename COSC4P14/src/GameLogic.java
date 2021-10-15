@@ -1,5 +1,4 @@
-import java.util.Scanner;
-
+import java.io.*;
 public class GameLogic {
     static enum PLAYERID{
         RED("R"),
@@ -26,12 +25,13 @@ public class GameLogic {
     public GameLogic(){
        initializeGameBoard();
     }
-    public int move(PLAYERID pID,Scanner input){
-        String move="";
+    
+    public int tryMove(PLAYERID pID,ObjectInputStream input) throws IOException,ClassNotFoundException {
+        ConnectHeader move=null;
         int validation;
         do{ //Keeps asking for moves until a valid move is played
-            move = input.next();
-            validation = validateAndPlay(move,pID);
+            move = (ConnectHeader)input.readObject();
+            validation = validateAndPlay(move.getM(),pID);
         }
         while (validation>0);
 
@@ -53,7 +53,7 @@ public class GameLogic {
                 System.out.println("This spot is already taken");
                 return 1;
             }
-            makeMove(r,c,pID); //make the move
+            executeMove(r,c,pID); //make the move
         }else {
             System.out.println("Invalid Row or Column index");
             return 0;}
@@ -61,15 +61,21 @@ public class GameLogic {
         return -1;
     }
 
-    public void makeMove(int r, int c, PLAYERID pID) {
+    public void executeMove(int r, int c, PLAYERID pID) {
         if(pID == PLAYERID.BLUE)
             gameBoard[r][c-1] = pID;
         else
             gameBoard[r][c-1] = pID;
     }
-    public PLAYERID[][] getGameBoard(){
-        return this.gameBoard;
+    
+   // public PLAYERID[][] getGameBoard(){
+     //   return this.gameBoard;
+    //}
+    
+    public String getGameBoard(){
+        return printGameBoard();
     }
+    
     public void resetGameBoard(){
         initializeGameBoard();
         System.out.println("Game board Reset");
@@ -93,25 +99,25 @@ public class GameLogic {
         }
     }
 
-    public int playerMove(GameLogic.PLAYERID pID, Scanner input, GameLogic logic){ //returns true if the game is over
+    public int playerMove(GameLogic.PLAYERID pID, ObjectInputStream input, GameLogic logic) throws IOException, ClassNotFoundException { //returns true if the game is over
         //String move1= input.next();
-        int validation = logic.move(pID,input);
+        int validation = logic.tryMove(pID,input);
         logic.printGameBoard();
         return validation;
     }
-
-    public boolean start(){
+    
+  /**  public boolean start(){
         Scanner input = new Scanner(System.in);
         PLAYERID currID = PLAYERID.RED;
         boolean isGameOver = false;
         while (!isGameOver){
-            playerMove(currID,input,this);
+          //  playerMove(currID,input,this);
             isGameOver = isWinningMove(currID);
             currID = currID==PLAYERID.RED?PLAYERID.BLUE:PLAYERID.RED;
         }
         return true;
     }
-
+*/
 //    public int isValidRow(char r){
 //        for (char c: rowLabel) {
 //            if(r==c)
