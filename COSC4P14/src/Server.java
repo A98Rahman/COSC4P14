@@ -22,7 +22,8 @@ public class Server {
                 ObjectOutputStream toPLayer1 = new ObjectOutputStream(playerSocket1.getOutputStream());
                 ObjectInputStream fromPlayer1 = new ObjectInputStream(playerSocket1.getInputStream());
 
-                toPLayer1.writeObject(new ConnectHeader(null, GameLogic.PLAYERID.RED.toString(),0,-1,"You are RED, waiting for BLUE"));
+                toPLayer1.writeObject(new ConnectHeader(null, GameLogic.PLAYERID.RED.toString(),-1,-1,"You are RED, waiting for BLUE"));
+                toPLayer1.flush();toPLayer1.reset();
 
                 playerSocket2 = new Socket();
                 playerSocket2 = serverSocket.accept(); //Blue
@@ -32,9 +33,12 @@ public class Server {
                 ObjectOutputStream toPLayer2 = new ObjectOutputStream(playerSocket2.getOutputStream());
                 ObjectInputStream fromPlayer2 = new ObjectInputStream(playerSocket2.getInputStream());
 
-                toPLayer1.writeObject(new ConnectHeader(null, GameLogic.PLAYERID.RED.toString(), 0,-1,"BLUE connected, starting game"));
-                toPLayer2.writeObject(new ConnectHeader(null, GameLogic.PLAYERID.BLUE.toString(),0,-1,"You are BLUE, RED is ready, starting game...RED starts"));
-//                BufferedReader fromPlayer1 = new BufferedReader(new InputStreamReader(playerSocket1.getInputStream()));
+                toPLayer1.writeObject(new ConnectHeader(null, GameLogic.PLAYERID.RED.toString(), -1,-1,"BLUE connected, starting game"));
+                toPLayer1.flush();toPLayer1.reset();
+
+                toPLayer2.writeObject(new ConnectHeader(null, GameLogic.PLAYERID.BLUE.toString(),-1,-1,"You are BLUE, RED is ready, starting game...RED starts"));
+                toPLayer2.flush();toPLayer2.reset();
+                //                BufferedReader fromPlayer1 = new BufferedReader(new InputStreamReader(playerSocket1.getInputStream()));
 //                BufferedReader fromPlayer2 = new BufferedReader(new InputStreamReader(playerSocket2.getInputStream()));
 
                 GameLogic game = new GameLogic();
@@ -49,7 +53,7 @@ public class Server {
                     boolean isGameOver = false;
                         while (!isGameOver){
                             //String move = fromPlayer1.readLine();
-                           // currPlayerInput = (currID==GameLogic.PLAYERID.RED)?fromPlayer1:fromPlayer2;
+                            // currPlayerInput = (currID==GameLogic.PLAYERID.RED)?fromPlayer1:fromPlayer2;
                             if (currID == GameLogic.PLAYERID.RED) {
                                 currPlayerInput = fromPlayer1;
                                 currPlayerOutput = toPLayer1;
@@ -58,17 +62,20 @@ public class Server {
                                 currPlayerOutput = toPLayer2;
                             }
                             int validMoveFlag=0;
-                            ConnectHeader clientResponse = null;
                             String message = "Your turn";
                             String invalidMsg="";
                             do{ //Keeps asking for moves until a valid move is played
-                                        //Sending the packet
-                                        ConnectHeader serverResponse = new ConnectHeader(game.getGameBoard(),currID.toString(),0,-1,"Your turn "+invalidMsg);
-                                        currPlayerOutput.writeObject(serverResponse);
-                                        clientResponse = (ConnectHeader)currPlayerInput.readObject();
-                                        validMoveFlag = game.validateAndPlay(clientResponse.getM(),currID);
-                                        invalidMsg = (validMoveFlag>=0?GameLogic.validationMessage[validMoveFlag]:"");
-                                        // -1: valid, 0: invalid index, 1: invalid move
+                                //Sending the packet
+                                ConnectHeader headerToClient = new ConnectHeader(game.getGameBoard(),currID.toString(),0,-1,"Your turn "+invalidMsg);
+                                currPlayerOutput.writeObject(headerToClient);
+                                currPlayerOutput.flush();currPlayerOutput.reset();
+
+                                ConnectHeader headerFromClient = (ConnectHeader)currPlayerInput.readObject();
+//                                printHeader(headerFromClient);
+
+                                validMoveFlag = game.validateAndPlay(headerFromClient.getM(),currID);
+                                invalidMsg = (validMoveFlag>=0?GameLogic.validationMessage[validMoveFlag]:"");
+                                // -1: valid, 0: invalid index, 1: invalid move
                               }
                               while (validMoveFlag > -1);
 
@@ -101,6 +108,12 @@ public class Server {
             System.err.println("Server exception: FATAL ERROR " + c.getMessage());
         }
 
+    }
+
+    public static void printHeader (ConnectHeader c) {
+        System.out.println(c.getgB());
+        System.out.print(c.getpID()+", "+c.getwF()+", "+c.getvF()+", "+c.getM());
+        System.out.println();
     }
 
     public static byte[] pack (ConnectHeader ch) {

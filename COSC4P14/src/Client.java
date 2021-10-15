@@ -8,7 +8,7 @@ public class Client {
         ObjectOutputStream outputToServer;
         ObjectInputStream inputFromServer;
         Socket clientSocket = null;
-        String playerID;
+        String playerID = null;
         boolean gameOver = false;
 
         try {
@@ -24,37 +24,45 @@ public class Client {
 
             String message = "";
 
-            ConnectHeader cH = (ConnectHeader)inputFromServer.readObject();
-            playerID = cH.getpID();
-            System.out.println(cH.getM());
-
             while (!gameOver) {
-                cH = (ConnectHeader)inputFromServer.readObject();
-                System.out.println();
+                ConnectHeader gameHeader = (ConnectHeader)inputFromServer.readObject();
+//                System.out.println("Header data");
+//                System.out.println(gameHeader.getgB());
+//                System.out.println(gameHeader.getpID());
+//                System.out.println(gameHeader.getwF());
+//                System.out.println(gameHeader.getvF());
+//                System.out.println(gameHeader.getM());
 
-                if (cH.getwF() == 1) {
-                    System.out.println(cH.getgB());
-                    System.out.println(cH.getM());
+                if (gameHeader.getwF() == 1) {
+                    System.out.println(gameHeader.getgB());
+                    System.out.println(gameHeader.getM());
                     gameOver = true;
                 }
-                else if (cH.getpID().equals(playerID)) {
-                    System.out.println(cH.getgB());
-                    System.out.println(cH.getM());
+                else if (gameHeader.getwF() == -1) {
+                    if (playerID == null) playerID = gameHeader.getpID();
+                    System.out.println(gameHeader.getM());
+//                    System.out.println("set player id");
+                }
+                else if (gameHeader.getpID().equals(playerID)) {
+//                    System.out.println("reached your turn");
+                    System.out.println(gameHeader.getgB());
+                    System.out.println(gameHeader.getM());
+//                    System.out.println("waiting for user input");
                     message = userInputReader.readLine();
                     if (!message.equals("quit")) { //Had to exit the loop. The connection is first terminated from server side.
                         outputToServer.writeObject(
                                 new ConnectHeader("", "", 0, -1, message)
                         );
-                        outputToServer.flush();
+                        outputToServer.flush();outputToServer.reset();
                     }
                 }
                 else {
                     System.out.println("Something went wrong");
-                    System.out.println(cH.getgB());
-                    System.out.println(cH.getpID());
-                    System.out.println(cH.getwF());
-                    System.out.println(cH.getvF());
-                    System.out.println(cH.getM());
+                    System.out.println(gameHeader.getgB());
+                    System.out.println(gameHeader.getpID());
+                    System.out.println(gameHeader.getwF());
+                    System.out.println(gameHeader.getvF());
+                    System.out.println(gameHeader.getM());
                 }
             }
 
