@@ -13,7 +13,7 @@ public class GameDemo {
 //        logic.printGameBoard();
         Scanner input = new Scanner(System.in);
         boolean isGameOver = false;
-        logic.start();
+//        logic.start();
     }
 
 }

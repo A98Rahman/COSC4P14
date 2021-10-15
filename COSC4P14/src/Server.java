@@ -22,7 +22,7 @@ public class Server {
                 ObjectOutputStream toPLayer1 = new ObjectOutputStream(playerSocket1.getOutputStream());
                 ObjectInputStream fromPlayer1 = new ObjectInputStream(playerSocket1.getInputStream());
 
-                toPLayer1.writeObject(new ConnectHeader(null,null,0,-1,"You are RED, waiting for BLUE"));
+                toPLayer1.writeObject(new ConnectHeader(null, GameLogic.PLAYERID.RED.toString(),0,-1,"You are RED, waiting for BLUE"));
 
                 playerSocket2 = new Socket();
                 playerSocket2 = serverSocket.accept();
@@ -32,8 +32,8 @@ public class Server {
                 ObjectOutputStream toPLayer2 = new ObjectOutputStream(playerSocket2.getOutputStream());
                 ObjectInputStream fromPlayer2 = new ObjectInputStream(playerSocket2.getInputStream());
 
-                toPLayer1.writeObject(new ConnectHeader(null,null,0,-1,"BLUE connected, starting game"));
-                toPLayer2.writeObject(new ConnectHeader(null,null,0,-1,"You are BLUE, RED is ready, starting game...RED starts"));
+                toPLayer1.writeObject(new ConnectHeader(null, GameLogic.PLAYERID.RED.toString(), 0,-1,"BLUE connected, starting game"));
+                toPLayer2.writeObject(new ConnectHeader(null, GameLogic.PLAYERID.BLUE.toString(),0,-1,"You are BLUE, RED is ready, starting game...RED starts"));
 //                BufferedReader fromPlayer1 = new BufferedReader(new InputStreamReader(playerSocket1.getInputStream()));
 //                BufferedReader fromPlayer2 = new BufferedReader(new InputStreamReader(playerSocket2.getInputStream()));
 

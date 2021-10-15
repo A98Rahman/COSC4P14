@@ -8,6 +8,8 @@ public class Client {
         ObjectOutputStream outputToServer;
         ObjectInputStream inputFromServer;
         Socket clientSocket = null;
+        String playerID;
+        boolean gameOver = false;
 
         try {
             clientSocket = new Socket("127.0.0.1",port);
@@ -22,25 +24,56 @@ public class Client {
 
             String message = "";
 
+            ConnectHeader cH = (ConnectHeader)inputFromServer.readObject();
+            playerID = cH.getpID();
+            System.out.println(cH.getM());
+
+            while (!gameOver) {
+                cH = (ConnectHeader)inputFromServer.readObject();
+
+                if (cH.getwF() == 1) {
+                    System.out.println(cH.getgB());
+                    System.out.println(cH.getM());
+                    gameOver = true;
+                }
+                else if (cH.getpID().equals(playerID)) {
+                    System.out.println(cH.getgB());
+                    System.out.println(cH.getM());
+                    message = userInputReader.readLine();
+                }
+                else {
+                    System.out.println("Something went wrong");
+                    System.out.println(cH.getgB());
+                    System.out.println(cH.getpID());
+                    System.out.println(cH.getwF());
+                    System.out.println(cH.getvF());
+                    System.out.println(cH.getM());
+                }
+            }
+
             while(!message.equals("quit")){ //Had to exit the loop. The connection is first terminated from server side.
 
-               // ConnectHeader cH = unpack(fromServerReader.readLine());
-               ConnectHeader cH = (ConnectHeader)inputFromServer.readObject();
-               System.out.println(cH.getgB());
-               String[] msgs = cH.getM().split(",");
-               for(String msg : msgs){
-                    System.out.println(msg);
-               }
-
-                //String response = fromServerReader.readLine();
-                //System.out.println(response);
-                message = userInputReader.readLine();
-                //writer.println(message);
-
-                ConnectHeader clientResponse = new ConnectHeader(cH.getgB(),cH.getpID(),cH.getwF(),cH.getvF(),message);
-                outputToServer.writeObject(clientResponse);
-
+                outputToServer.writeObject(
+                        new ConnectHeader("","", 0, -1, message)
+                );
                 outputToServer.flush();
+               // ConnectHeader cH = unpack(fromServerReader.readLine());
+//               ConnectHeader cH = (ConnectHeader)inputFromServer.readObject();
+//               System.out.println(cH.getgB());
+//               String[] msgs = cH.getM().split(",");
+//               for(String msg : msgs){
+//                    System.out.println(msg);
+//               }
+//
+//                //String response = fromServerReader.readLine();
+//                //System.out.println(response);
+//                message = userInputReader.readLine();
+//                //writer.println(message);
+//
+//                ConnectHeader clientResponse = new ConnectHeader(cH.getgB(),cH.getpID(),cH.getwF(),cH.getvF(),message);
+//                outputToServer.writeObject(clientResponse);
+//
+//                outputToServer.flush();
             }
 
             //String response = fromServerReader.readLine();
