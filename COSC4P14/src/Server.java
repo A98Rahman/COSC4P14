@@ -17,7 +17,7 @@ public class Server {
             while (true) {
                 System.out.println("Client hit me!");
                 playerSocket1 = new Socket();
-                playerSocket1 = serverSocket.accept();
+                playerSocket1 = serverSocket.accept(); //Red
                 System.out.println("Player 1 connected, waiting for player 2");
                 ObjectOutputStream toPLayer1 = new ObjectOutputStream(playerSocket1.getOutputStream());
                 ObjectInputStream fromPlayer1 = new ObjectInputStream(playerSocket1.getInputStream());
@@ -25,7 +25,7 @@ public class Server {
                 toPLayer1.writeObject(new ConnectHeader(null,null,0,-1,"You are RED, waiting for BLUE"));
 
                 playerSocket2 = new Socket();
-                playerSocket2 = serverSocket.accept();
+                playerSocket2 = serverSocket.accept(); //Blue
                 //playerSocket2 = serverSocket.accept();
                 System.out.println("Player 2 connected, starting game...");
 
@@ -49,7 +49,7 @@ public class Server {
                     boolean isGameOver = false;
                         while (!isGameOver){
                             //String move = fromPlayer1.readLine();
-                            currPlayerInput = (currID==GameLogic.PLAYERID.RED)?fromPlayer1:fromPlayer2;
+                           // currPlayerInput = (currID==GameLogic.PLAYERID.RED)?fromPlayer1:fromPlayer2;
                             if (currID == GameLogic.PLAYERID.RED) {
                                 currPlayerInput = fromPlayer1;
                                 currPlayerOutput = toPLayer1;
