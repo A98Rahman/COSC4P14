@@ -151,6 +151,7 @@ public class GameLogic {
     String board="";
         for (int row = 0; row < 6; row++) {
             System.out.print(Character.toString(rowLabel[row]) + '\t');
+            board+=Character.toString(rowLabel[row]) + '\t';
             for (int col = 0; col < 7; col++) {
                 board += ((gameBoard[row][col]) == null ?"-":((gameBoard[row][col]).toString()) )+ '\t';
                 System.out.print(((gameBoard[row][col]) == null ?"-":((gameBoard[row][col]).toString()) )+ '\t');
@@ -159,6 +160,7 @@ public class GameLogic {
             System.out.println();
         }
         System.out.print('\t');
+        board+="\t";
         for (int i = 0; i < 7; i++) {
             board+= ""+(i+1)+"\t";
             System.out.print(i+1);
@@ -171,7 +173,7 @@ public class GameLogic {
     }
 
     public boolean isWinningMove(PLAYERID pID){
-        if(verticalCombination(pID) || horizontalCombination(pID)){
+        if(verticalCombination(pID) || horizontalCombination(pID)|| forwardDiagonalCombination(pID) || backwardDiagonalCombination(pID)){
             System.out.println("Gameover: PLAYER "+ pID.toString()+" WINS.");
             return true;
         }
@@ -203,6 +205,34 @@ public class GameLogic {
         }
         return false;
     }
+
+    public boolean backwardDiagonalCombination(PLAYERID pID) {
+        for (int row = 3; row < 6; row++) {
+            for (int col = 0; col < 7 - 3; col++) {
+                if (gameBoard[row][col] == pID &&
+                        gameBoard[row - 1][col + 1] == pID &&
+                        gameBoard[row - 2][col + 2] == pID &&
+                        gameBoard[row - 3][col + 3] == pID)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean forwardDiagonalCombination(PLAYERID pID) {
+        for (int row = 3; row < 6; row++) {
+            for (int col = 3; col < 7; col++) {
+                if (gameBoard[row][col] == pID &&
+                        gameBoard[row - 1][col - 1] == pID &&
+                        gameBoard[row - 2][col - 2] == pID &&
+                        gameBoard[row - 3][col - 3] == pID)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+
 //    public boolean diagonalCombination(PLAYERID pID){
 //        int consec = 0;
 //        for (int row = 0; row < 3; row++) {

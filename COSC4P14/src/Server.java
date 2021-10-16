@@ -64,6 +64,7 @@ public class Server {
                             int validMoveFlag=0;
                             String message = "Your turn";
                             String invalidMsg="";
+                            String move;
                             do{ //Keeps asking for moves until a valid move is played
                                 //Sending the packet
                                 ConnectHeader headerToClient = new ConnectHeader(game.getGameBoard(),currID.toString(),0,-1,"Your turn "+invalidMsg);
@@ -75,6 +76,7 @@ public class Server {
 
                                 validMoveFlag = game.validateAndPlay(headerFromClient.getM(),currID);
                                 invalidMsg = (validMoveFlag>=0?GameLogic.validationMessage[validMoveFlag]:"");
+                                move = headerFromClient.getM();
                                 // -1: valid, 0: invalid index, 1: invalid move
                               }
                               while (validMoveFlag > -1);
