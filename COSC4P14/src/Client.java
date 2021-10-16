@@ -33,19 +33,19 @@ public class Client {
 //                System.out.println(gameHeader.getvF());
 //                System.out.println(gameHeader.getM());
 
-                if (gameHeader.getwF() == 1) {
+                if (gameHeader.getwF() == 1) { //If the player has won
                     System.out.println(gameHeader.getgB());
                     System.out.println(gameHeader.getM());
                     gameOver = true;
                 }
-                else if (gameHeader.getwF() == -1) {
+                else if (gameHeader.getwF() == -1) { //Pre game conditions when WF = -1
                     if (playerID == null) playerID = gameHeader.getpID();
                     System.out.println(gameHeader.getM());
 //                    System.out.println("set player id");
                 }
-                else if (gameHeader.getpID().equals(playerID)) {
+                else if (gameHeader.getpID().equals(playerID)) { //If its our turn
 //                    System.out.println("reached your turn");
-                    System.out.println(gameHeader.getgB());
+                    System.out.println(gameHeader.getgB()); //Print the gameBoard to the client
                     System.out.println(gameHeader.getM());
 //                    System.out.println("waiting for user input");
                     message = userInputReader.readLine();
