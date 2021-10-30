@@ -16,80 +16,73 @@ public class Server {
 
             while (true) {
                 System.out.println("Client hit me!");
-                playerSocket1 = new Socket();
-                playerSocket1 = serverSocket.accept(); //Red
-                System.out.println("Player 1 connected, waiting for player 2");
-                ObjectOutputStream toPLayer1 = new ObjectOutputStream(playerSocket1.getOutputStream());
-                ObjectInputStream fromPlayer1 = new ObjectInputStream(playerSocket1.getInputStream());
 
-                toPLayer1.writeObject(new ConnectHeader(null, GameLogic.PLAYERID.RED.toString(),-1,-1,"You are RED, waiting for BLUE. For input commands Enter the coordinates of the spot you want to mark eg. A4"));
-                toPLayer1.flush();toPLayer1.reset();
-
-                playerSocket2 = new Socket();
-                playerSocket2 = serverSocket.accept(); //Blue
-                //playerSocket2 = serverSocket.accept();
                 System.out.println("Player 2 connected, starting game...");
 
-                ObjectOutputStream toPLayer2 = new ObjectOutputStream(playerSocket2.getOutputStream()); //Input and output streams of player 2
-                ObjectInputStream fromPlayer2 = new ObjectInputStream(playerSocket2.getInputStream());
-
-                toPLayer1.writeObject(new ConnectHeader(null, GameLogic.PLAYERID.RED.toString(), -1,-1,"BLUE connected, starting game"));
-                toPLayer1.flush();toPLayer1.reset();
-
-                toPLayer2.writeObject(new ConnectHeader(null, GameLogic.PLAYERID.BLUE.toString(),-1,-1,"You are BLUE, RED is ready, starting game...RED starts For input commands Enter the coordinates of the spot you want to mark eg. A4"));
-                toPLayer2.flush();toPLayer2.reset();
-
                 GameLogic game = new GameLogic();
-                //                BufferedReader fromPlayer1 = new BufferedReader(new InputStreamReader(playerSocket1.getInputStream()));
-//                BufferedReader fromPlayer2 = new BufferedReader(new InputStreamReader(playerSocket2.getInputStream()));
+                Player playerRed = null;
+                Thread redPlayer = null;
+                Player playerBlue = null;
+                Thread bluePlayer = null;
+
+                while (playerSocket1 == null) { //Wait until a Player/socket is connected.
+                    playerSocket1 = serverSocket.accept(); //Red
+
+                    playerRed = new Player(GameLogic.PLAYERID.RED, playerSocket1, game);
+                    redPlayer = new Thread(playerRed);
+                    synchronized (redPlayer) {
+                        redPlayer.start();
+                        redPlayer.wait();
+                    }
+                }
+
+                while (playerSocket2 == null) { //Wait until Player blue is also connected.
+                    playerSocket2 = serverSocket.accept();
+                    playerBlue = new Player(GameLogic.PLAYERID.BLUE, playerSocket2, game);
+                    bluePlayer = new Thread(playerBlue);
+                    synchronized (bluePlayer) {
+                        bluePlayer.start();
+                        bluePlayer.wait();
+                    }
+                }
+                Thread curr = redPlayer;
+
 
                 while(playerSocket1 !=null && playerSocket2 !=null){ //if the players are not connected then stop the progression
                     //game.start();
                     // header: |String gameboard|String playerID|int win|int validMove|String message|
 //                    Scanner input = new Scanner(System.in);
                     GameLogic.PLAYERID currID = GameLogic.PLAYERID.RED;
-                    ObjectInputStream currPlayerInput;
-                    ObjectOutputStream currPlayerOutput;
+                    Player currPlayer = playerRed;
+
                     boolean isGameOver = false;
-                        while (!isGameOver){
-                            //String move = fromPlayer1.readLine();
-                            // currPlayerInput = (currID==GameLogic.PLAYERID.RED)?fromPlayer1:fromPlayer2;
-                            if (currID == GameLogic.PLAYERID.RED) {
-                                currPlayerInput = fromPlayer1;
-                                currPlayerOutput = toPLayer1;
-                            } else {
-                                currPlayerInput = fromPlayer2;
-                                currPlayerOutput = toPLayer2;
+                        while (!isGameOver) {
+
+                     //       ConnectHeader ch = null;
+
+                            try {
+                                if (currID == GameLogic.PLAYERID.BLUE) {
+                                    synchronized (bluePlayer) {
+                                        bluePlayer.wait();
+                                        bluePlayer.notify(); //This makes the red players thread run
+                                    }
+                                } else{
+                                synchronized (redPlayer) {
+                                    redPlayer.wait();
+                                    redPlayer.notify();
+                                }
                             }
-                            int validMoveFlag=0;
-                            String message = "Your turn";
-                            String invalidMsg="";
-                            String move;
-                            do{ //Keeps asking for moves until a valid move is played
-                                //Sending the packet to the client initially, each iteration a new packet is sent to the client with flags and a message
-                                ConnectHeader headerToClient = new ConnectHeader(game.getGameBoard(),currID.toString(),0,-1,"Your turn "+invalidMsg);
-                                currPlayerOutput.writeObject(headerToClient);
-                                currPlayerOutput.flush();
-                                currPlayerOutput.reset();
-
-                                ConnectHeader headerFromClient = (ConnectHeader)currPlayerInput.readObject();
-//                              //Response from the client
-
-                                validMoveFlag = game.validateAndPlay(headerFromClient.getM(),currID);
-                                invalidMsg = (validMoveFlag>=0?GameLogic.validationMessage[validMoveFlag]:""); //The syntax error for the command
-                                // -1: valid, 0: invalid index, 1: invalid move
-                              }
-                              while (validMoveFlag > -1);
-
-
+                        }catch (InterruptedException ie){
+                            ie.printStackTrace();
+                    }
 
                             isGameOver = game.isWinningMove(currID);//win flag
                             String board = game.printGameBoard(); //gameboard
                             String newMessage= "Awaiting opponents turn";
-                            ConnectHeader ServerResponse2 = new ConnectHeader(board,currID.toString(),(isGameOver?1:0),validMoveFlag,newMessage);
-                            //byte[] pack = pack(ch);
-                            currPlayerOutput.writeObject(ServerResponse2); //Sent to the client indicating that their turn is over
+                            if(currID == GameLogic.PLAYERID.RED){
+                            }else{
 
+                            }
 
                             currID = currID==GameLogic.PLAYERID.RED?GameLogic.PLAYERID.BLUE:GameLogic.PLAYERID.RED; // Changes the current player
                         }
@@ -99,8 +92,8 @@ public class Server {
         } catch (IOException ex) {
             System.out.println("Server exception: " + ex.getMessage());
             ex.printStackTrace();
-        }catch(ClassNotFoundException c){
-            System.err.println("Server exception: FATAL ERROR " + c.getMessage());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
     }

@@ -13,7 +13,7 @@ public class Client {
 
         try {
             clientSocket = new Socket("127.0.0.1",port);
-            System.out.println("Client Connection Succesful");
+            System.out.println("Connected on port: " + clientSocket.getPort());
 
             //BufferedReader fromServerReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream())); //Gets the server output as input to the client.
             BufferedReader userInputReader = new BufferedReader(new InputStreamReader(System.in)); //Accept input from the user
