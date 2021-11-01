@@ -1,8 +1,12 @@
+import javax.xml.crypto.Data;
 import java.io.*;
 import java.net.*;
+import java.sql.SQLOutput;
+import java.util.Scanner;
+
 public class Client {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         Client client = new Client();
     }
 
@@ -10,14 +14,44 @@ public class Client {
     private String playerID;
     private boolean yourTurn;
 
-    public Client () {
+    public Client () throws IOException {
         String playerID = null;
         boolean gameOver = false;
+        byte[] ipAddr = new byte[]{127,0,0,1};
+        byte[] buf= new byte[1024];
+
 
         System.out.println("---Connecting to server---");
+        boolean connect2Udp = true;
+        Scanner input = new Scanner(System.in);
+        do{
+            System.out.println("Press 1 to play \n press 2 to download game history");
+            int in = input.nextInt();
 
-        cNet = new ClientNetworking();
-        yourTurn = false;
+            if(in == 2){
+                byte[] pingBuf = "ping52".getBytes();
+                DatagramSocket udpSocket = new DatagramSocket();
+                DatagramPacket pkt = new DatagramPacket(pingBuf,pingBuf.length,InetAddress.getByAddress(ipAddr),5100);
+                udpSocket.send(pkt);
+                udpSocket.setSoTimeout(4000);
+                byte[] rBuf = new byte[4096];
+                while(true){
+                    DatagramPacket pkt2 = new DatagramPacket(rBuf,rBuf.length);
+                    if(udpSocket!=null)
+                    udpSocket.receive(pkt2);
+                    System.out.println(pkt2.getData());
+                    FileOutputStream fos = new FileOutputStream("Transfered.txt");
+                    fos.write(pkt2.getData());
+                    udpSocket.close();
+                }
+//                udpSocket.close();
+            }else{
+                cNet = new ClientNetworking();
+                yourTurn = false;
+            }
+        }while(connect2Udp);
+
+
 //            PrintWriter writer = new PrintWriter(outputToServer, true); //This writer object will write and send the data to the server.
 
         String message = "";
