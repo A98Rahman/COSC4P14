@@ -1,14 +1,14 @@
 import java.io.*;
 import java.net.*;
 import java.util.Date;
-public class ServerThread extends Thread{
-    public Socket socket;
+public class SerPlNotInUse implements Runnable {
 
-    public ServerThread(Socket client) {
+    private Socket socket;
+
+
+    public SerPlNotInUse(Socket client) {
         this.socket = client; // Instantiate the socket object we get from MultiServer class
     }
-
-
 
     public void run() {
 

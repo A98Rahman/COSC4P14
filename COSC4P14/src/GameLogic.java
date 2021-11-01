@@ -26,7 +26,7 @@ public class GameLogic {
         initializeGameBoard();
     }
 
-    //    public int tryMove(PLAYERID pID,ObjectInputStream input) throws IOException,ClassNotFoundException {
+//        public int tryMove(PLAYERID pID,ObjectInputStream input) throws IOException,ClassNotFoundException {
 //        ConnectHeader move=null;
 //        int validation;
 //        do{ //Keeps asking for moves until a valid move is played
@@ -40,7 +40,7 @@ public class GameLogic {
 //
 //        return validation;
 //    }
-    // Validates and plays the move
+//    // Validates and plays the move
     public int validateAndPlay(String move, PLAYERID pID) { //Rows go from A to F and columns from 1 to 7
         int r, c;
         if (move.length() != 2) {
