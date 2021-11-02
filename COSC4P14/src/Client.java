@@ -1,7 +1,5 @@
-import javax.xml.crypto.Data;
 import java.io.*;
 import java.net.*;
-import java.sql.SQLOutput;
 import java.util.Scanner;
 
 public class Client {
@@ -29,21 +27,11 @@ public class Client {
             int in = input.nextInt();
 
             if(in == 2){
-                byte[] pingBuf = "ping52".getBytes();
+//                byte[] pingBuf = "ping52".getBytes();
                 DatagramSocket udpSocket = new DatagramSocket();
-                DatagramPacket pkt = new DatagramPacket(pingBuf,pingBuf.length,InetAddress.getByAddress(ipAddr),5100);
-                udpSocket.send(pkt);
-                udpSocket.setSoTimeout(4000);
-                byte[] rBuf = new byte[4096];
-                while(true){
-                    DatagramPacket pkt2 = new DatagramPacket(rBuf,rBuf.length);
-                    if(udpSocket!=null)
-                    udpSocket.receive(pkt2);
-                    System.out.println(pkt2.getData());
-                    FileOutputStream fos = new FileOutputStream("Transfered.txt");
-                    fos.write(pkt2.getData());
-                    udpSocket.close();
-                }
+                RDTReciever rcvr = new RDTReciever(udpSocket);
+                Thread rcvThread = new Thread(rcvr);
+                rcvThread.start();
 //                udpSocket.close();
             }else{
                 cNet = new ClientNetworking();
@@ -181,11 +169,13 @@ public class Client {
                 inputFromServer = new ObjectInputStream(clientSocket.getInputStream()); //Gets the input stream that receives data from the server.
                 outputToServer = new ObjectOutputStream(clientSocket.getOutputStream()); //Gets the output stream that outputs the data to the server
 
+                //UDP part must be here.
+
                 //Connection confirmation
                 ConnectHeader cnctCon = (ConnectHeader) inputFromServer.readObject();
                 playerID = cnctCon.getpID();
                 System.out.printf("%s%n",cnctCon.getM());
-                
+
                 //Game start notification
                 ConnectHeader gsn = (ConnectHeader) inputFromServer.readObject();
                 playerID = gsn.getpID();
@@ -218,6 +208,83 @@ public class Client {
                 ioe.printStackTrace();
             }
 
+        }
+    }
+
+    public class RDTReciever implements  Runnable{
+        DatagramSocket socket = null;
+        public byte[] ipAddr = new byte[]{127,0,0,1};
+        int ackCtr;
+        byte[] rcvbuf = new byte[32];
+        FileOutputStream fos;// = new FileInputStream("RcvdFile.txt");
+        ObjectOutputStream oos;//= new ObjectInputStream(fis);
+        public RDTReciever(DatagramSocket socket) throws IOException {
+            this.socket = socket;
+            fos = new FileOutputStream("RcvdFile.txt");
+            oos = new ObjectOutputStream(fos);
+            ackCtr = 0;
+        }
+
+        public void rcvAll() throws IOException, ClassNotFoundException {
+            while(socket!=null){
+                DatagramPacket pkt = getPkt();
+                socket.receive(pkt);
+                if(pkt.getData().length>0){
+                    ackCtr++;
+                    sendAck();
+                    handleData(pkt);
+                    //Write the buffer to file stream
+                }
+
+            }
+        }
+
+
+        public void sendAck() throws UnknownHostException {
+            String ack = "ACK,"+ ackCtr;
+            DatagramPacket pkt = new DatagramPacket(ack.getBytes(), ack.getBytes().length,InetAddress.getByAddress(ipAddr),5100);
+            try {
+                socket.send(pkt);
+            }catch (IOException e){
+                e.printStackTrace();
+                System.out.println("ERROR WHILE SENDING AN ACK");
+            }
+        }
+
+        public DatagramPacket getPkt(){
+            return new DatagramPacket(rcvbuf, rcvbuf.length);
+        }
+        public void handshake() throws IOException {
+            DatagramPacket pkt = new DatagramPacket("Hello".getBytes(), "HELLO".getBytes().length,InetAddress.getByAddress(ipAddr),5100);
+            socket.send(pkt);
+        }
+
+        public void handleData(DatagramPacket pkt) throws IOException, ClassNotFoundException {
+            byte[] dat = pkt.getData();
+            byte[] seg = new byte[32];
+            ByteArrayInputStream bais = new ByteArrayInputStream(dat);
+            ObjectInputStream ois = new ObjectInputStream(bais);
+            RDTSegment rdt = null;
+            if(ois.available()>0) {
+                rdt = (RDTSegment) ois.readObject();
+            }else{return;}
+            if(rdt!=null && rdt.seq>ackCtr) {
+                System.out.println("Packet Recieved: Seq# = "+rdt.seq+" Ack#: "+ackCtr);
+                oos.write(rdt.data);
+            }else{
+                System.out.println("Duplicate sequence recieved: "+rdt.seq);
+            }//Else Drop the packet
+            rcvbuf = new byte[32];
+        }
+
+        @Override
+        public void run() {
+            try {
+                handshake();
+                rcvAll();
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
         }
     }
     

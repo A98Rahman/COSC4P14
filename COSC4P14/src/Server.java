@@ -28,35 +28,25 @@ public class Server {
 
         while(true) {
             try {
-                udpSocket = new DatagramSocket(5100);
-                 byte[] buf = new byte[256];
-                if(udpSocket != null){
-                    boolean isAlive = true;
-                    while(isAlive){
-                        DatagramPacket pkt = new DatagramPacket(buf,buf.length);
-                        udpSocket.receive(pkt); //Receive packets from UDP sockets
-                        //printData(pkt.getData());
-                        File txtfile = new File("Koftarecipe.txt");
-//                        ObjectInputStream os = new ObjectInputStream(new FileInputStream(txtfile));
-                        FileInputStream fs = new FileInputStream(txtfile);
-                        buf = new byte[4096];
-                        buf = fs.readAllBytes();
-
-                        if(pkt.getData().length > 1){ //If there is any data in the packet that means we have recieved a message
-                            System.out.println(pkt.getData().toString());//
-                            DatagramPacket pkt2 = new DatagramPacket(buf,buf.length,pkt.getSocketAddress());
-//                            DatagramPacket pkt = new DatagramPacket();
-                            respond(pkt2); //respond to the client
-                            isAlive = false;
-                        }
-                    }
-                    udpSocket.close();
-                }
-            } catch (SocketException e) {
-                e.printStackTrace();
+                Rdt rdt = new Rdt();
+                Thread rdtThread = new Thread(rdt);
+                rdtThread.start();
+//                udpSocket = new DatagramSocket(5100);
+//                 byte[] buf = new byte[256];
+//                if(udpSocket.isConnected()){
+//                    boolean isAlive = true;
+//                    while(isAlive){
+//                        Rdt rdt= new Rdt(udpSocket,new File("Koftarecipe.txt"));
+//                        rdt.createSegments();
+//                    }
+//                    udpSocket.close();
+//                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
+//            catch (IOException e) {
+//                e.printStackTrace();
+//            }
 
             try (
                     ServerSocket serverSocket = new ServerSocket(port);
@@ -136,12 +126,15 @@ public class Server {
         ObjectOutputStream output;
 
         public GameLogic.PLAYERID playerID;
+        public GameLogic.PLAYERID opponentID;
         GameLogic game;
 
         public ServerPlayerConnection(GameLogic.PLAYERID playerID, Socket playerSocket, GameLogic game) throws IOException {
 
             //initialize resources
             this.playerID = playerID;
+            if (playerID == GameLogic.PLAYERID.RED) this.opponentID = GameLogic.PLAYERID.BLUE;
+            else this.opponentID = GameLogic.PLAYERID.RED;
             this.playerSocket = playerSocket;
             this.game = game;
 
@@ -167,16 +160,43 @@ public class Server {
                 while (true) {
                     ConnectHeader msgIn = (ConnectHeader) input.readObject();
                     if (playerID == GameLogic.PLAYERID.RED) {
-                        System.out.println(msgIn.getM());
-                        bluePlayer.msgPlayer(new ConnectHeader(game.getGameBoard(),blueID,0,-1,"Your turn BLUE"));
+                        System.out.println(msgIn.getM() + " from RED");
+                        ConnectHeader nextHead = tryMove(msgIn);
+                        if (nextHead.getvF() == -1) {
+                            bluePlayer.msgPlayer(nextHead);
+                        } else {
+                            msgPlayer(nextHead);
+                        }
                     } else {
-                        System.out.println(msgIn.getM());
-                        redPlayer.msgPlayer(new ConnectHeader(game.getGameBoard(),redID,0,-1,"Your turn RED"));
+                        System.out.println(msgIn.getM() + " from BLUE");
+                        ConnectHeader nextHead = tryMove(msgIn);
+                        if (nextHead.getvF() == -1) {
+                            redPlayer.msgPlayer(nextHead);
+                        } else {
+                            msgPlayer(nextHead);
+                        }
                     }
                 }
             } catch (IOException | ClassNotFoundException e){
                 e.printStackTrace();
             }
+        }
+
+        public ConnectHeader tryMove (ConnectHeader lastHead) {
+            ConnectHeader nextHead = new ConnectHeader("","",0,-1,"");
+            nextHead.setvF(game.validateAndPlay(lastHead.getM(),playerID));
+            nextHead.setgB(game.getGameBoard());
+            switch (nextHead.getvF()) {
+                case -1:
+                    nextHead.setpID(opponentID.toString());
+                    nextHead.setM("Your turn");
+                    break;
+                default:
+                    if (nextHead.getvF() == 0) nextHead.setM("Invalid index, try again");
+                    else nextHead.setM("Space already taken, try again");
+                    nextHead.setpID(playerID.toString());
+            }
+            return nextHead;
         }
 
         public void msgPlayer (ConnectHeader header) {
