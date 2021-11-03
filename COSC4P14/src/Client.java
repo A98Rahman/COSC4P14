@@ -10,7 +10,6 @@ public class Client {
 
     private ClientNetworking cNet;
     private String playerID;
-    private boolean yourTurn;
 
     public Client () throws IOException {
         String playerID = null;
@@ -35,7 +34,6 @@ public class Client {
 //                udpSocket.close();
             }else{
                 cNet = new ClientNetworking();
-                yourTurn = false;
             }
         }while(connect2Udp);
 
@@ -180,9 +178,6 @@ public class Client {
                 ConnectHeader gsn = (ConnectHeader) inputFromServer.readObject();
                 playerID = gsn.getpID();
                 System.out.printf("%s%n",gsn.getM());
-                
-                //RED starts
-                if (playerID.equals("R")) yourTurn = true;
 
                 while (true) {
                     ConnectHeader header = (ConnectHeader) inputFromServer.readObject();
@@ -191,6 +186,7 @@ public class Client {
                     String move = userInputReader.readLine();
                     outputToServer.writeObject(new ConnectHeader(header.getgB(),playerID,header.getwF(),header.getvF(),move));
                     outputToServer.flush();
+                    System.out.println("Waiting for opponent...");
                 }
 
             } catch (IOException | ClassNotFoundException ex) {

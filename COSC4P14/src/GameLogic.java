@@ -21,6 +21,8 @@ public class GameLogic {
 
     public PLAYERID[][] gameBoard = new PLAYERID[6][7];//6 rows and 7 columns
     public boolean playerID; //True = Blue, False = red
+    public boolean gameOver = false;
+    public PLAYERID winner = null;
 
     public GameLogic() {
         initializeGameBoard();
@@ -59,7 +61,6 @@ public class GameLogic {
             System.out.println("Invalid Row or Column index");
             return 0;
         }
-
         return -1;
     }
 
@@ -176,34 +177,18 @@ public class GameLogic {
     }
 
     //Checks if the player has won or not
-    public boolean isWinningMove(PLAYERID pID) {
+    public int isWinningMove(PLAYERID pID) {
         if (verticalCombination(pID) || horizontalCombination(pID) || forwardDiagonalCombination(pID) || backwardDiagonalCombination(pID)) {
+            winner = pID;
+            gameOver = true;
             System.out.println("Gameover: PLAYER " + pID.toString() + " WINS.");
-            return true;
+            return 1;
         }
-        return false;
+        return 0;
     }
 
     //Checks if there is a connect 4 vertically
     public boolean verticalCombination(PLAYERID pID) {
-        int consec = 0;
-        for (int row = 0; row < 6; row++) {
-            for (int col = 0; col < 7; col++) {
-                if (gameBoard[row][col] == pID) {
-                    consec++;
-                    if (consec == 4) {
-                        return true;
-                    }
-                } else {
-                    consec = 0;
-                }
-            }
-        }
-        return false;
-    }
-
-    // checks if there is a connect 4 horizontally
-    public boolean horizontalCombination(PLAYERID pID) {
         int consec = 0;
         for (int col = 0; col < 7; col++) {
             for (int row = 0; row < 6; row++) {
@@ -220,10 +205,28 @@ public class GameLogic {
         return false;
     }
 
+    // checks if there is a connect 4 horizontally
+    public boolean horizontalCombination(PLAYERID pID) {
+        int consec = 0;
+        for (int row = 0; row < 6; row++) {
+            for (int col = 0; col < 7; col++) {
+                if (gameBoard[row][col] == pID) {
+                    consec++;
+                    if (consec == 4) {
+                        return true;
+                    }
+                } else {
+                    consec = 0;
+                }
+            }
+        }
+        return false;
+    }
+
     //Backward diagonal check for a connect 4
     public boolean backwardDiagonalCombination(PLAYERID pID) {
         for (int row = 3; row < 6; row++) {
-            for (int col = 0; col < 7 - 3; col++) {
+            for (int col = 0; col < 4; col++) {
                 if (gameBoard[row][col] == pID &&
                         gameBoard[row - 1][col + 1] == pID &&
                         gameBoard[row - 2][col + 2] == pID &&
