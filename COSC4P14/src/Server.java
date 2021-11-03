@@ -1,4 +1,3 @@
-import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.net.*;
 import java.io.*;
@@ -93,6 +92,16 @@ public class Server {
                 Thread blueThread = new Thread(bluePlayer);
                 blueThread.start();
 
+                try {
+                    System.out.println("Threads started");
+                    redThread.join();
+                    blueThread.join();
+                    System.out.println("Threads Finished");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                System.out.println("Threads finished");
 
             } catch (IOException ex) {
                 System.out.println("Server exception: " + ex.getMessage());
@@ -157,46 +166,95 @@ public class Server {
                 }
 
 
-                while (true) {
+                do {
                     ConnectHeader msgIn = (ConnectHeader) input.readObject();
+                    //if RED player
                     if (playerID == GameLogic.PLAYERID.RED) {
                         System.out.println(msgIn.getM() + " from RED");
-                        ConnectHeader nextHead = tryMove(msgIn);
+                        ConnectHeader nextHead = doTurn(msgIn);
+                        //if move is valid
                         if (nextHead.getvF() == -1) {
-                            bluePlayer.msgPlayer(nextHead);
+                            //if NO win
+                            if (msgIn.getwF() == 0) {
+                                bluePlayer.msgPlayer(nextHead);
+                            }
+                            //if winner
+                            else {
+                                System.out.println("Game over, RED wins");
+                                System.out.println(game.gameOver);
+                                redPlayer.msgPlayer(nextHead);
+                                bluePlayer.msgPlayer(nextHead);
+                            }
                         } else {
                             msgPlayer(nextHead);
                         }
+                    //if BLUE player
                     } else {
                         System.out.println(msgIn.getM() + " from BLUE");
-                        ConnectHeader nextHead = tryMove(msgIn);
+                        ConnectHeader nextHead = doTurn(msgIn);
+                        //if move is valid
                         if (nextHead.getvF() == -1) {
-                            redPlayer.msgPlayer(nextHead);
+                            //if NO win
+                            if (msgIn.getwF() == 0) {
+                                redPlayer.msgPlayer(nextHead);
+                            }
+                            //if winner
+                            else {
+                                System.out.println("Game over, BLUE wins");
+                                bluePlayer.msgPlayer(nextHead);
+                                redPlayer.msgPlayer(nextHead);
+                            }
                         } else {
                             msgPlayer(nextHead);
                         }
                     }
-                }
+                    output.flush();
+                } while (!game.gameOver);
             } catch (IOException | ClassNotFoundException e){
                 e.printStackTrace();
             }
         }
 
-        public ConnectHeader tryMove (ConnectHeader lastHead) {
+        public ConnectHeader doTurn (ConnectHeader lastHead) {
             ConnectHeader nextHead = new ConnectHeader("","",0,-1,"");
+            //flag for move validity
             nextHead.setvF(game.validateAndPlay(lastHead.getM(),playerID));
+            //load current board state
             nextHead.setgB(game.getGameBoard());
             switch (nextHead.getvF()) {
+                //if valid move
                 case -1:
-                    nextHead.setpID(opponentID.toString());
-                    nextHead.setM("Your turn");
+                    //flag for win condition/ongoing game
+                    nextHead.setwF(game.isWinningMove(playerID));
+                    switch (nextHead.getwF()) {
+                        //No winner
+                        case 0:
+                            nextHead.setpID(opponentID.toString());
+                            nextHead.setM("Your turn");
+                            break;
+                        //Winner!
+                        case 1:
+                            nextHead.setM(endGameMsg());
+                            nextHead.setpID(playerID.toString());
+                    }
                     break;
+                //invalid move
                 default:
                     if (nextHead.getvF() == 0) nextHead.setM("Invalid index, try again");
                     else nextHead.setM("Space already taken, try again");
                     nextHead.setpID(playerID.toString());
             }
             return nextHead;
+        }
+
+        public String endGameMsg () {
+            String winMsg;
+            switch (game.winner) {
+                case RED:
+                    return "RED wins! Thanks for playing";
+                default:
+                    return "BLUE wins! Thanks for playing";
+            }
         }
 
         public void msgPlayer (ConnectHeader header) {
