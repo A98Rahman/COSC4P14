@@ -14,7 +14,7 @@ public class Rdt implements Runnable{
 
         this.UDPSocket = new DatagramSocket(5100);
         this.file = new File("Koftarecipe.txt");
-        buf = new byte[32];
+        buf = new byte[256];
         loadFile(file);
         allSegments = new LinkedList<RDTSegment>();
         System.out.println("UDPSocket created.");
@@ -72,6 +72,7 @@ public class Rdt implements Runnable{
         oos.writeObject(segment);
         oos.flush();
         byte[] data = baos.toByteArray();
+        System.out.println("Segment "+ segment.seq+" Length is :" + data.length + " bytes");
 
         DatagramPacket pkt = new DatagramPacket(data,data.length,sa);
 
@@ -86,7 +87,13 @@ public class Rdt implements Runnable{
 
         for (int i = 0; i < data.length/16; i++) {
             byte[] segment = Arrays.copyOfRange(data,i*16,(i+1)*16);
-            allSegments.add(new RDTSegment(i,16,segment));
+            allSegments.add(new RDTSegment(i,256,segment));
+//            allSegments
+        }
+        if((data.length/16)+16 <data.length){
+            int i = data.length/16;
+            byte[] segment = Arrays.copyOfRange(data,i*16,data.length);
+            allSegments.add(new RDTSegment(((data.length/16)+1),256,segment));
         }
         System.out.println();
 
@@ -97,7 +104,7 @@ public class Rdt implements Runnable{
              allSegments) {
             send(seg,sa);
             UDPSocket.setSoTimeout(2000); // Time out for a second
-            byte[] rcvbuf = new byte[16];
+            byte[] rcvbuf = new byte[32];
             DatagramPacket pkt = new DatagramPacket(rcvbuf, rcvbuf.length);
             System.out.println("Sent a packet#: "+ seg.seq);
             try {

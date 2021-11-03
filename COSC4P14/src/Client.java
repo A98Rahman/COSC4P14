@@ -215,9 +215,11 @@ public class Client {
         DatagramSocket socket = null;
         public byte[] ipAddr = new byte[]{127,0,0,1};
         int ackCtr;
-        byte[] rcvbuf = new byte[32];
+        byte[] rcvbuf = new byte[256];
         FileOutputStream fos;// = new FileInputStream("RcvdFile.txt");
         ObjectOutputStream oos;//= new ObjectInputStream(fis);
+        File rcvdFile;
+        PrintWriter writer;//= new PrintWriter(rcvdFile);
         public RDTReciever(DatagramSocket socket) throws IOException {
             this.socket = socket;
             fos = new FileOutputStream("RcvdFile.txt");
@@ -229,13 +231,14 @@ public class Client {
             while(socket!=null){
                 DatagramPacket pkt = getPkt();
                 socket.receive(pkt);
+                rcvdFile = new File("rcvdFile.txt");
+                writer = new PrintWriter(new FileWriter(rcvdFile,true));
                 if(pkt.getData().length>0){
-                    ackCtr++;
-                    sendAck();
+//                    ackCtr++;
                     handleData(pkt);
                     //Write the buffer to file stream
                 }
-
+                writer.close();
             }
         }
 
@@ -261,20 +264,26 @@ public class Client {
 
         public void handleData(DatagramPacket pkt) throws IOException, ClassNotFoundException {
             byte[] dat = pkt.getData();
-            byte[] seg = new byte[32];
+            byte[] seg = new byte[16];
             ByteArrayInputStream bais = new ByteArrayInputStream(dat);
             ObjectInputStream ois = new ObjectInputStream(bais);
             RDTSegment rdt = null;
-            if(ois.available()>0) {
+            //if(ois.available()>0) {
                 rdt = (RDTSegment) ois.readObject();
-            }else{return;}
-            if(rdt!=null && rdt.seq>ackCtr) {
+                System.out.println(ackCtr+ '\t' +rdt.seq);
+            //}else{return;}
+            if(rdt!=null && rdt.seq>=ackCtr) {
                 System.out.println("Packet Recieved: Seq# = "+rdt.seq+" Ack#: "+ackCtr);
-                oos.write(rdt.data);
+//                oos.write(rdt.data);
+                System.out.println("hit");
+                System.out.println(new String(rdt.data));
+                writer.append(new String(rdt.data));
+                ackCtr++;
+                sendAck();
             }else{
                 System.out.println("Duplicate sequence recieved: "+rdt.seq);
             }//Else Drop the packet
-            rcvbuf = new byte[32];
+            rcvbuf = new byte[256];
         }
 
         @Override
